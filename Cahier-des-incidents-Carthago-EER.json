@@ -1,0 +1,315 @@
+[
+	{
+		"title": "Consommation de clients",
+		"description": "Comment faire pour inserer de nouveaux clients dans Carthago EER",
+		"equipe": "IT_production",
+		"application": "CartagoEER",
+		"mot_clets": "cartago;incident;insertion;",
+		"solution": {
+			"description": "Lors de l’insertion de nouveaux clients dans Carthago EER, il faut suivre les étapes suivantes :\n1-\tExécuter le script Q:\\Etudes\\MEP\\CarthagoEER\\Moulinette\\spoolRepriseNew.sql avec Sql developer en apportant les spécifications suivantes :\n-\tLe fichier de destination (ligne 18), par défaut : D:\\Resultextrationf1.txt\n-\tLes codes clients Amplitude à insérer (ligne 190)   \t\n\n2-\tLe fichier plat résultant doit être mis en forme suivante : (Annexe 1)\n \nUn exemple de fichier (Resultextrationf1.txt) est dans le répertoire :  Q:\\Etudes\\MEP\\CarthagoEER\\Moulinette\\\nSi le fichier contient un résultat doublons (nombre de clients x 2), supprimer la deuxième moitié du fichier doublon en attendant de rectifier le script SQL.\nVérifier que la colonne |V| n’existe pas et qu’elle est sous forme de |VPAT| (dans le cas contraire, le fichier de sortie est à modifier en attendant de rectifier le script SQL.\nVérifier que la colonne DATE_REV ne contienne pas d’espace supplémentaires, ça doit être sous forme |DATE_REV|, tous les espaces supplémentaires doivent être supprimés, en attendant de rectifier le script.\nRenseigner les dates de dernière révision dans le fichier Excel afin que les dates des prochaines révisions ne soient pas calculées automatiquement. Pour cela, utiliser les scripts powershell préparés dans Q:\\PRODUCTION 2023\\Carthago\\EEREV (plateforme web)\\Etapes d'introduction des clients pour reprise\n3-\tCopier le fichier plat traité dans le répertoire : D:\\Reprise\\in dans le serveur prod eerappbabz01 pour consommation automatique.\n4-\tIl faut surveiller la consommation du fichier qui est censé passer d’abord par le répertoire D:\\Reprise\\temp puis atterrir dans D:\\Reprise\\backup une fois consommé.\n\nOn peut suivre l’exécution de la moulinette via le log :\nC:\\Program Files(x86)\\IBM\\WebSphere\\AppServer\\profiles\\AppEER\\logs\\EERAppBabz01\\trace.log  \n              On peut vérifier également sur l’outil Carthago EER, dans le menu fiche client, si les clients sont remontés correctement.\nRemarque : il faut consommer le fichier d’abord en recette avant de le faire en production.\n",
+			"images": [
+				{
+					"titre": "Resultextrationf1.txt",
+					"image_link": "1.png"
+				}
+			]
+		}
+	},
+	{
+		"title": "Problème du calcul du niveau de risque",
+		"description": "Problème lors de la validation de l’étape 5, à cause du calcul du niveau de risque",
+		"equipe": "IT_production",
+		"application": "CartagoEER",
+		"mot_clets": "cartago;incident;insertion;",
+		"solution": {
+			"description": "1-\tProblème technique :  Vérifier la disponibilité du webservice et de l’applicatif Siron, corriger et relancer le calcul du niveau risque puis la validation de l’étape. \n2-\tProblème fonctionnel : Vérifier si les mandataires (Actionnaire, mandataire, représentant) s’ils sont bien saisis, si c’est n’est pas le cas, demander aux utilisateurs de faire une reprise tache pour corriger les données.\n-\tIl faut vérifier les actionnaires PM (lorsqu’ ils existent) s’ils sont bien déclarés qu’une seule fois (une seule ligne par personne morale)\n-\tIl faut vérifier la cohérence des données du client principal.  \n\n•\tSi l’Erreur initiale est  Groovy (la modification du nom n’est pas autorisée) lors du passage à l’étape suivante, alors : La différence du nom entre Carthago Référentiel et Amplitude a fait en sorte qu’Amplitude bloque le passage d’étape sur Carthago Référentiel, étant donné que Amplitude détecte qu’on essaye de modifier le nom depuis Carthago Référentiel (ce que Amplitude n’autorise pas, car certains changements sur Carthago Référentiel impactent le client sur Amplitude). Les clients sur Carthago Référentiel sont actuellement chargés manuellement par la procédure de « Reprise ». D’une manière technique les clients sont extraits depuis Amplitude pour être chargés sur Carthago Référentiel, avec le nom qu’avaient ces clients sur Amplitude à cet instant de chargement. La solution est de soit modifier les noms sur Amplitude pour les faire correspondre à Carthago Référentiel ou bien modifier les noms des clients sur Carthago Référentiel depuis la BDD pour les faire correspondre à Amplitude.\n\n•\tSi l’erreur est  (Annexe 1)\n\nVérifier le fichier axis.log situé dans le dossier de Carthago Référentiel dans le dossier IBM (Websphere). axis.log contient tous les appels aux webservices \nRechercher par le numéro client en bas du fichier et constater l’erreur dans la réponse de Sinon (Annexe 2):  \n\nLe cas le plus probable, est le fait qu’un tiers est déclaré en double avec le même type , dans la fiche KYC, comme l’indique la capture problématique ci-dessous :\n\n(Annexe 3)\n\nUne solution est de demander à la cellule EER de modifier le type d’un des tiers déclaré en double. Un tiers déclaré en double ne peut être en double que si son type est différent (R1, BO, AS…), concrètement sur carthago référentiel chaque code du type de tiers (R1, BO, AS…) a une signification (mandataire, ….)\n\nLe même problème peut arriver lorsque certains champs dépassent la longueur autorisée\n\n\nLorsque le collaborateur a modifié la description de l’activité (champs uniquement pour une certaine catégorie de clients) pour vider ce champs, alors la demande est passée sans problème.\n\n (Annexe 4)\nIl faut donc demander au collaborateur de raccourcir le champs\n",
+			"images": [
+				{
+					"titre": "JavaLang Exception",
+					"image_link": "2.png"
+				},
+				{
+					"titre": "Error Text",
+					"image_link": "3.jpg"
+				},
+				{
+					"titre": "Declaration double",
+					"image_link": "4.jpg"
+				},
+				{
+					"titre": "ligne 135",
+					"image_link": "5.png"
+				}
+			]
+		}
+	},
+	{
+		"title": "Problème d’accès à l’outil",
+		"description": "Problème lors de l’authentification de l’utilisateur, l’outil renvoie vers la même page (d’authentification) ",
+		"equipe": "IT_production",
+		"application": "CartagoEER",
+		"mot_clets": "cartago;incident;insertion;",
+		"solution": {
+			"description": "-\tLe problème est dû au compte utilisateur qui n’a pas de profil adéquate. Il faut transférer au CSL afin de mettre à jour celui-ci suivant la matrice d’habilitation.  ",
+			"images": []
+		}
+	},
+	{
+		"title": "Problème GED",
+		"description": "Problème de référencement entre le dossier client Carthago-EER et le dossier GED.",
+		"equipe": "IT_production",
+		"application": "CartagoEER",
+		"mot_clets": "cartago;incident;insertion;",
+		"solution": {
+			"description": "Rétrograder la version du document manuellement sur la GED à la bonne référence (voir la suite de ce document)",
+			"images": []
+		}
+	},
+	{
+		"title": "Problème de validation d’étape",
+		"description": "Indépendamment des cas précédents, cela peut être lié aux données mal saisies durant l’étape en cours ou les étapes précédentes.",
+		"equipe": "IT_production",
+		"application": "CartagoEER",
+		"mot_clets": "cartago;incident;insertion;",
+		"solution": {
+			"description": "-\tIl faut vérifier les formulaires, plus particulièrement les adresse mails, les différentes dates, les numéros (RC, n° autorisation … etc.) s’ils sont correctement saisies. \n-\tEgalement, il faut vérifier également la taille des commentaires dans l’onglet Avis et commentaire et ailleurs s’ils ne dépassent pas 255 caractères (normalement cela est limité dans Carthago)\n-\tIl faut utiliser la log (trace.log) pour remonter l’erreur et essayer de déterminer l’origine de celle-ci et du champ concerné. \n-\tUne fois la cause définie, il faut demander aux utilisateurs de corriger cette erreur (parfois en faisant une reprise tache) et de relancer la validation de l’étape.\n-\tSi ce n’est pas définie il faut remonter au prestataire. \n",
+			"images": []
+		}
+	},
+	{
+		"title": "Problème d’affectation de dossier à un dispatcheur",
+		"description": "La demande survient lors d’un départ du collaborateur ou d’un congé ou d’une mobilité. Le dossier doit être affecté à un autre utilisateur.",
+		"equipe": "IT_production",
+		"application": "CartagoEER",
+		"mot_clets": "cartago;incident;insertion;",
+		"solution": {
+			"description": "-\tOrienter les métiers vers le CSL pour affecter les dossiers du collaborateur indisponible vers le nouveau collaborateur (Solution recommandée).\n-\tFaire une reprise tache technique de l’instance du workflow :\n1.\tMettre le statut de l’étape en cours de « en attente » à « Non exécutée ».\n2.\tMettre le statut de l’étape précédente (dispatcheur) de « terminée » à « en attente ».\n(Annexe 1) (Annexe 2\n)",
+			"images": [
+				{
+					"titre": "Carthago-Referentiel",
+					"image_link": "6.png"
+				},
+				{
+					"titre": "Instance workflow",
+					"image_link": "7.png"
+				}
+			]
+		}
+	},
+	{
+		"title": "Problème de mise à jour des pièces jointes",
+		"description": "1.\tMessage d'erreur :\n \n2.\tMessage d'erreur :\n\n \n",
+		"images": [
+			{
+				"titre": "message erreur 1",
+				"image_link": "8.jpg"
+			},
+			{
+				"titre": "message erreur 2",
+				"image_link": "9.jpg"
+			}
+		],
+		"equipe": "IT_production",
+		"application": "CartagoEER",
+		"mot_clets": "cartago;incident;insertion;",
+		"solution": {
+			"description": "Il faut recharger la catégorie client, comme suit :\n\n1-\tMettre à vide. \n (Annexe 1)\n2-\tRemettre la bonne catégorie\n (Annexe 2)\n \n \nLa liste des documents va être rechargée et vous pourrez mettre à jour les pièces jointes\n",
+			"images": [
+				{
+					"titre": "categorie client vide",
+					"image_link": "10.png"
+				},
+				{
+					"titre": "la bonne categorie",
+					"image_link": "11.png"
+				}
+			]
+		}
+	},
+	{
+		"title": "Problème GED 2",
+		"description": "Lors de la validation d’étape sur Carthago-EER, l’un des messages d’erreur suivants apparait:\n1.\tMessage d'erreur :\n(Annexe 1) , (Annexe 2)\n\nLe problème est dû à un mauvais référencement entre le dossier client sur l’outil Cartago-EER & celui sur la GED.  \n",
+		"images": [
+			{
+				"titre": "message erreur 1",
+				"image_link": "12.png"
+			},
+			{
+				"titre": "message erreur 2",
+				"image_link": "13.png"
+			}
+		],
+		"equipe": "IT_production",
+		"application": "CartagoEER",
+		"mot_clets": "cartago;incident;insertion;",
+		"solution": {
+			"description": "La solution est de cibler les documents du client qui sont attachés sur l’outil Carthago-EER mais qui ne sont pas la version finale affichée en avant dans le dossier GED + renommer les noms de fichiers qui sont à NULL et qui pointent vers des ID sur la GED, en fonction de leur nom sur la GED (car c’est les noms NULL qui causent le NULL Pointer exception) :\n1-\tExécuter la requête suivante sur le schema DEF de CARTEER PROD :\n(Trouver la référence de la demande précédente dans le menu Révision Fiche KYC > Consultation demande Révision fiche KYC)\n<>\nalter session set current_schema=CART_DEF;\nselect d.pk_, g.IS_CURRENT, d.file_name_, g.U1708_DOCUMENTTITLE, d.document_id_, g.object_id, t.documentdescription_, t.documentpk_,d.PK_ from DOCUMENTTP t \ninner join DOCUMENTTPDOCUMENT d on t.documentPK_=d.PK_ \ninner join DOCVERSION@GEDPROD_LINK1 g on g.OBJECT_ID like concat('%',replace(replace (SUBSTR(d.DOCUMENT_ID_,21),'-',''),'}',''))\nwhere t.operation1code_='2021|00061|0000061' and g.U1898_PT_S1_NCART ='2021|00061|0000061'\norder by t.documentPK_;\n</>\nVoici le résultat :  \n(Annexe 1) \nLes lignes (documents) qui ont la colonnes IS_CURRENT à 0, veut dire que la version du document (qui est dans la GED) n’est pas la dernière version sur EER. EER pointe toujours vers une ancienne version du document (celle qui n’est pas publiée). Cela veut dire qu’il y a une version dans en plus dans la GED.\n2-\tSupprimer les versions de documents qui sont en trop sur la GED et qui ne correspondent pas aux documents rattachés sur Carthago-EER.  (Annexe 2) , (Annexe 3)\n \n3-\tMettre à jour les noms des documents «FILE_NAME_ » qui sont à null  coté Carthago-EER avec leurs correspondants coté GED « U1708_DOCUMENTTITLE» \nRequête : \n<>\nupdate CART_DEF.DOCUMENTTPDOCUMENT set FILE_NAME_='RESIDENCE.pdf' where pk_='137957';\n</>\n\n4-\tSupprimer les versions de documents qui sont en trop sur la GED et qui ne correspondent pas aux documents rattachés sur Carthago-EER. (Annexe 4)\n \n\n5-\tVérifier avec la requête précédente si la colonnes is_Current est à 1 pour tous les documents et que tous les noms nuls sont remplis.  \nRemarque :\nIl faut penser à garder une copie des documents supprimé sur la GED dans un répertoire local par précaution.\nUne fois que cela est réglé, il faut demander aux métiers de relancer l’étape.\n\nLes lignes (documents) qui ont la colonnes IS_CURRENT à 0, veut dire que la version du document (qui est dans la GED) n’est pas celles qui est publiée dans la GED. Cela veut dire qu’il y a une version dans en plus dans la GED.\n",
+			"images": [
+				{
+					"titre": "resultat requete",
+					"image_link": "14.png"
+				},
+				{
+					"titre": "Carthago-EER",
+					"image_link": "15.png"
+				},
+				{
+					"titre": "Versions EER",
+					"image_link": "16.png"
+				},
+				{
+					"titre": "Carthago EER",
+					"image_link": "17.png"
+				}
+			]
+		}
+	},
+	{
+		"title": "Problème Changement d’agence",
+		"description": "Quelles sont les étapes a suivre lors d’une demande de changement d’agence pour un dossier client sur Carthago-EER ?",
+		"images": [],
+		"equipe": "IT_production",
+		"application": "CartagoEER",
+		"mot_clets": "cartago;incident;insertion;",
+		"solution": {
+			"description": "Lors d’une demande de changement d’agence pour un dossier client sur Carthago-EER il faut suivre les étapes suivantes :\n-\tMise à l'abandon de l'instance sur la base de donnée :\n<>\nalter session set current_schema=CART_DEF;\n\nselect t.STATUSCODE_, t.STATUSPK_ , t.CURRENTWORKFLOWSTEP_, t.* from clientrr t where t.CODE_='2021|00312|0000003'; \n\nupdate CLIENTRR t set t.STATUSCODE_='com.bfi.ref.eer.ClientRelationRequest/05' where CODE_='2021|00312|0000003';\n\nupdate CLIENTRR t set t.STATUSPK_='34' where CODE_='2021|00312|0000003';\n\nupdate CLIENTRR t set t.CURRENTWORKFLOWSTEP_=NULL where CODE_='2021|00312|0000003';\n//2021|00312|0000003 est la référence d’un dossier en exemple.\ncommit;\n</>\n\n-\tMise en échec de l'instance sur l'interface IHM. \n(Annexe 1)\n(Annexe 2)\n\n-\tMise à jour de la table BANKCLIENT :\n<>\nupdate BANKCLIENT set UNITPK_='17' where CLIENTSIREFERENCE_='705143';\nupdate BANKCLIENT set UNITCODE_='NA/00313' where CLIENTSIREFERENCE_='705143'; \ncommit;\n\n//Remarques:\n//'705143' est code client en exemple.\n//UNITPK_=’17’ est la clé correspondante à l’agence NA/00313. Pour retrouver les clés correspondantes aux agences, il faut faire :\n\nSelect distinct(UNITPK_), UNITCODE_ from BANKCLIENT;\n</>\n\n-\tMise à jour du dossier GED\n\nIl faut déplacer le dossier GED du client depuis l’ancienne agence vers la nouvelle agence dans la GED \n\n\nDans le menu Fiche Client  Historique Client\nS’il y a deux demandes (première = dossier migration, et la deuxième concerne la demande de révision suspendue à l’agence qu’on souhaite changer et qu’on vient d’abandonner via une requête précédente)\nAlors il faut faire un retour arrière dans les versions des documents sur la GED pour que IS_CURRENT soit à 1 pour la première demande (dossier migration). Il faut faire une suppression des versions des documents de la demande abandonnée pour revenir en arrière vers la demande migration, et ce via la requête\n\n<>\nalter session set current_schema=CART_DEF;\nselect d.pk_, g.IS_CURRENT, d.file_name_, g.U1708_DOCUMENTTITLE, d.document_id_, g.object_id, t.documentdescription_, t.documentpk_,d.PK_ from DOCUMENTTP t \ninner join DOCUMENTTPDOCUMENT d on t.documentPK_=d.PK_ \ninner join DOCVERSION@GEDPROD_LINK1 g on g.OBJECT_ID like concat('%',replace(replace (SUBSTR(d.DOCUMENT_ID_,21),'-',''),'}',''))\nwhere t.operation1code_='2019|00314|0000008' and g.U1898_PT_S1_NCART ='2019|00314|0000008'\norder by t.documentPK_;\n</>\n(Annexe 3)\n\nCar sinon, si on ne fait pas ça, alors le dispatcheur ne pourra pas dispatcher le dossier migration à nouveau pour créer une nouvelle demande de révision. D’où la nécessité de suppression des versions en plus sur la GED (voir un incident en haut mieux décrit pour plus de détails) \n(Annexe 4)\n\nAinsi, le dispatcheur pourra affecter le dossier migration et créer une nouvelle demande \n(Annexe 5)\n\nA noter que l’agence de la nouvelle demande sera l’agence de la demande précédente (et non pas la nouvelle agence, du à une contrainte technique qui associe la nouvelle demande créée par le dispatcheur backoffice (personne en charge de dispatcher) ) malgré que la référence de la demande contient l’ancienne agence (comme 2023|00314|0000010 en exemple) . \n\nDès que le dispatcheur créé la nouvelle demande, il faut faire une requête pour également lui modifier l’agence \nLe code agence dans la référence de la demande n’est pas indicateur de l’agence de la demande. Il faut plutôt voir le champs « Agence ».\n<>\nupdate CART_DEF.clientrr set UNITPK_='17', UNITCODE_='NA/00313' where code_='2023|00314|0000010';\n</>\n\nRésultat final  de la demande :\n(Annexe 6)\n\nCela est dû à une contrainte technique sur EER qui fait que toute nouvelle demande est associée à l’agence de la demande précédente, et ce même si la fiche client avait été modifiée vers une nouvelle agence via une précédente rectification.\n",
+			"images": [
+				{
+					"titre": "Instance workflow",
+					"image_link": "18.png"
+				},
+				{
+					"titre": "Enregistrer",
+					"image_link": "19.png"
+				},
+				{
+					"titre": "table",
+					"image_link": "20.png"
+				},
+				{
+					"titre": "incident",
+					"image_link": "21.png"
+				},
+				{
+					"titre": "creation nouvelle demande",
+					"image_link": "22.png"
+				},
+				{
+					"titre": "resultat finale",
+					"image_link": "23.jpg"
+				}
+			]
+		}
+	},
+	{
+		"title": "Incident lors de la modification d’un utilisateur",
+		"description": "(Annexe 1) \n Suite à des bugs, des modifications restent à l’état Draft dans la table MSSEC_ENTITYM",
+		"images": [
+			{
+				"titre": "Message incident",
+				"image_link": "23.jpg"
+			}
+		],
+		"equipe": "IT_production",
+		"application": "CartagoEER",
+		"mot_clets": "cartago;incident;insertion;",
+		"solution": {
+			"description": "Remplacer XXX par le code de l’utilisateur :\n<>\nupdate CART_DEF.MSSEC_ENTITYM set STATUS_='Canceled' where STATUS_='Draft' and CODEENTITYTYPE_=’XXX’;\n</>\n",
+			"images": []
+		}
+	},
+	{
+		"title": "Problème Champs pourcentage avec amplitude",
+		"description": "(Annexe 1)\nLes logs de l’erreur sur le service modifycustomer (sur l’AIF 1 ou l’AIF 2) sont les suivants: \n(Annexe 2)\n- Ceci est dû à une erreur lors de la soumission de la valeur 0.001 au serveur amplitude.\n- Amplitude n'accepte que des valeurs avec deux chiffres après la virgule.\n",
+		"images": [
+			{
+				"titre": "Erreur java",
+				"image_link": "24.png"
+			},
+			{
+				"titre": "log erreur",
+				"image_link": "25.png"
+			}
+		],
+		"equipe": "IT_production",
+		"application": "CartagoEER",
+		"mot_clets": "cartago;incident;insertion;",
+		"solution": {
+			"description": "Vérifier les valeurs de l’attribut  CURRENCYVALUE2_ dans la table CLIENTSI dans chacun des écrans  :\n\nEcran des mandataires-dirigeants-actionnaires.. :\n<>\nSELECT c.cuser_, c.uuser_, c.pk_, c.currencyValue2_, c.stringvalue1_, c.stringvalue2_, c.stringvalue7_, c.ownerlist1pk_\nFROM clientsi c\nLEFT JOIN CLIENTRR r ON c.ownerlist1pk_ = r.screen7pk_\nWHERE r.screen7pk_ = (SELECT screen7pk_ FROM CLIENTRR WHERE code_ = '2021|00168|0000001');\n</>\n\nEcran des actionnaires PM :\n<>\nSELECT c.cuser_, c.uuser_, c.pk_, c.currencyValue2_, c.stringvalue1_, c.stringvalue2_, c.stringvalue7_, c.ownerlist1pk_\nFROM clientsi c\nLEFT JOIN CLIENTRR r ON c.ownerlist2pk_ = r.screen7pk_\nWHERE r.screen7pk_ = (SELECT screen7pk_ FROM CLIENTRR WHERE code_ = '2022|00168|0000006');\n</>\n\nscreen7pk_ dans la table CLIENTRR ==  ownerlist1pk_ dans la table CLIENTSI    (1er écran)\nscreen7pk_ dans la table CLIENTRR ==  ownerlist2pk_ dans la table CLIENTSI    (2ème écran)\n\n\ndans l’écran des mandataires ou bien dans l’écran des actionnaires, sur le champs  % part social, Seulement un pourcentage avec deux chiffres après la virgule est affiché ( ça peut être plus dans la base de données ) . \n \n(Annexe 1)\n*dans ce cas (0.001) est la valeur qui produit l'erreur.\n(Annexe 2)\n\n\n-Vérifier les valeurs currencyValue2_   ( % Part social ) correspondant au champ stringvalue1_ ( Nom) et  stringvalue1_ (Prénom ) pour choisir les valeur a corrigé.\n\nFaire passer des requêtes update pour remettre les valeurs à 0 :\n<>\nupdate cart_def.clientsi set CURRENCYVALUE2_ = '0' where pk_ = '51636' ;\nupdate cart_def.clientsi set CURRENCYVALUE2_ = '0' where pk_ = '51637' ;\nupdate cart_def.clientsi set CURRENCYVALUE2_ = '0' where pk_ = '51638' ;\nupdate cart_def.clientsi set CURRENCYVALUE2_ = '0' where pk_ = '51639' ;\nupdate cart_def.clientsi set CURRENCYVALUE2_ = '0' where pk_ = '51640' ;\n</>\n\n",
+			"images": [
+				{
+					"titre": "champs  % part social",
+					"image_link": "26.png"
+				},
+				{
+					"titre": "champs  % part social BDD",
+					"image_link": "27.png"
+				}
+			]
+		}
+	},
+	{
+		"title": "Nom d’un collaborateur ne s’affiche pas",
+		"description": "Le nom d’un collaborateur ne s’affiche pas dans la case « Gestionnaire » pour la cellule EER, ils ne peuvent donc pas affecter un client à un gestionnaire\n\n(collaborateur inexistant dans la liste ci-dessous)\n(Annexe 1)\n",
+		"images": [
+			{
+				"titre": "la case « Gestionnaire »",
+				"image_link": "28.png"
+			}
+		],
+		"equipe": "IT_production",
+		"application": "CartagoEER",
+		"mot_clets": "cartago;incident;insertion;",
+		"solution": {
+			"description": "Cause : Pour le collaborateur qui ne s’affiche pas dans la liste, dans le menu Référentiel > Structure et organisation de la banque > Personnel de Banque, le champs « Texte libre » prévu à contenir le code gestionnaire du collaborateur n’est pas renseigné \n(Annexe 1)\n\n- Pour regler cela if faut renseigner le code gestionnaire dans le champs Texte libre \n(Annexe 2)\n\n \n",
+			"images": [
+				{
+					"titre": "texte libre",
+					"image_link": "29.png"
+				},
+				{
+					"titre": "texte libre remplis avec le code",
+					"image_link": "30.png"
+				}
+			]
+		}
+	},
+	{
+		"title": "GROOVY : cannot invoke getidentifier() on null object",
+		"description": "Dans l’étape 9 de la révision\n(Annexe 1)\n\nDans la fiche KYC du client et dans la base de données, rechercher la ville\n(Annexe 2)\n\nRechercher le code de la ville stocké pour ce client dans la base Carthago Référentiel, via la requête suivante : \n<>\nSELECT r.code_, c.selectvalue10_, c.selectvalue11_ FROM clientsi c\nLEFT JOIN CLIENTRR r ON c.pk_ = r.screen7pk_\nWHERE c.pk_ = (SELECT screen7pk_ FROM CLIENTRR WHERE code_ = '2023|00291|0000001');\n</>\n\n(Annexe 3)\n \nConstater que sur le menu référentiel des villes, 29000 existe bien\n(Annexe 4)\n\n\nAvant l’envoi vers Amplitude, l’application Carthago cherche l’identifiant de la ville dans la liste des communes sur Carthago Référentiel\n\nSur Carthago Référentiel, 29000 n’existe pas dans la liste des communes, les communes commencent par 29001. Vu que 29000 n’est pas trouvée, Carthago Référentiel ne peut pas déterminer le code Wilaya associé à la commune.  D’où l’erreur en rouge  « cannot invoke method getIdentifier() », car tout simplement Carthago Référentiel est dans l’impossibilité de déterminer le numéro de Wilaya d’une commune inexistante avec l’identifiant 29000.\n(Annexe 5)\n",
+		"images": [
+			{
+				"titre": "Texte d'erreur",
+				"image_link": "31.png"
+			},
+			{
+				"titre": "Champs Vile bdd",
+				"image_link": "32.png"
+			},
+			{
+				"titre": "resultat requete",
+				"image_link": "33.png"
+			},
+			{
+				"titre": "menu référentiel des villes",
+				"image_link": "34.jpg"
+			},
+			{
+				"titre": "table communes",
+				"image_link": "35.jpg"
+			}
+		],
+		"equipe": "IT_production",
+		"application": "CartagoEER",
+		"mot_clets": "cartago;incident;insertion;",
+		"solution": {
+			"description": "Demander à la cellule EER de demander au gestionnaire de changer la ville dans la fiche KYC avec une ville dont l’identifiant existe en même temps dans la ville et en même temps dans les communes,\n\nPar exemple 29001, elle existe dans la liste des villes et en même temps dans la liste des communes avec le même identifiant\n(Annexe 1)\n \nSolution à long terme :\nFaire un travail de vérification des liens entre les villes et les communes sur Carthago Référentiel, afin qu’éviter que ce problème se reproduise suite à une ville qui n’a aucune commune.\n",
+			"images": [
+				{
+					"titre": "liste des villes",
+					"image_link": "36.jpg"
+				}
+			]
+		}
+	}
+]

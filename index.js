@@ -3,7 +3,7 @@ const mysql = require("mysql");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 
-const testRoute = require("./routes/test");
+const testRoute = require("./routes/incidents");
 
 var { config } = require("dotenv");
 const port = process.env.PORT || 3010;
