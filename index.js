@@ -2,6 +2,8 @@ const express = require("express");
 const mysql = require("mysql");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const multer = require('multer');
+const path = require('path');
 
 const testRoute = require("./routes/incidents");
 
@@ -15,6 +17,8 @@ if (dev) {
 
 const app = express();
 
+
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors({
     origin: '*'
